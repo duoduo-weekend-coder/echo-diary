@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Mic, Square, Trash2 } from 'lucide-react'
+import { useEffect, useRef } from 'react'
+import { Mic, Square, Trash2, Upload } from 'lucide-react'
 import { useMediaRecorder } from '../hooks/useMediaRecorder'
 
 function formatDuration(s) {
@@ -7,7 +7,8 @@ function formatDuration(s) {
 }
 
 export default function AudioRecorder({ value, onChange }) {
-  const { isRecording, audioDataUrl, error, duration, startRecording, stopRecording, clearRecording } = useMediaRecorder()
+  const { isRecording, audioDataUrl, error, deviceNotFound, duration, startRecording, stopRecording, clearRecording } = useMediaRecorder()
+  const fileRef = useRef()
 
   useEffect(() => {
     if (audioDataUrl) onChange(audioDataUrl)
@@ -18,11 +19,19 @@ export default function AudioRecorder({ value, onChange }) {
     onChange(null)
   }
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => onChange(reader.result)
+    reader.readAsDataURL(file)
+  }
+
   return (
     <div className="space-y-2">
       {error && <p className="text-xs text-red-600 font-ui">{error}</p>}
 
-      {!value && !isRecording && (
+      {!value && !isRecording && !deviceNotFound && (
         <button
           type="button"
           onClick={startRecording}
@@ -34,6 +43,21 @@ export default function AudioRecorder({ value, onChange }) {
           <span>Add voice note</span>
         </button>
       )}
+
+      {deviceNotFound && !value && (
+        <button
+          type="button"
+          onClick={() => fileRef.current.click()}
+          className="flex items-center gap-2 text-sm text-espresso-light hover:text-amber font-ui transition-colors"
+        >
+          <div className="w-8 h-8 rounded-full bg-parchment-dark flex items-center justify-center">
+            <Upload size={14} />
+          </div>
+          <span>Upload audio file</span>
+        </button>
+      )}
+
+      <input ref={fileRef} type="file" accept="audio/*" className="hidden" onChange={handleFileChange} />
 
       {isRecording && (
         <div className="flex items-center gap-3">

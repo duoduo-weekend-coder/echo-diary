@@ -4,6 +4,7 @@ export function useMediaRecorder() {
   const [isRecording, setIsRecording] = useState(false)
   const [audioDataUrl, setAudioDataUrl] = useState(null)
   const [error, setError] = useState(null)
+  const [deviceNotFound, setDeviceNotFound] = useState(false)
   const [duration, setDuration] = useState(0)
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
@@ -11,6 +12,7 @@ export function useMediaRecorder() {
 
   const startRecording = useCallback(async () => {
     setError(null)
+    setDeviceNotFound(false)
     setAudioDataUrl(null)
     setDuration(0)
     try {
@@ -38,7 +40,11 @@ export function useMediaRecorder() {
         setDuration(d => d + 1)
       }, 1000)
     } catch (err) {
-      setError(err.message || 'Microphone access denied')
+      if (err.name === 'NotFoundError') {
+        setDeviceNotFound(true)
+      } else {
+        setError(err.message || 'Microphone access denied')
+      }
     }
   }, [])
 
@@ -53,7 +59,8 @@ export function useMediaRecorder() {
   const clearRecording = useCallback(() => {
     setAudioDataUrl(null)
     setDuration(0)
+    setDeviceNotFound(false)
   }, [])
 
-  return { isRecording, audioDataUrl, error, duration, startRecording, stopRecording, clearRecording }
+  return { isRecording, audioDataUrl, error, deviceNotFound, duration, startRecording, stopRecording, clearRecording }
 }
