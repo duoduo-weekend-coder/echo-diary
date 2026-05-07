@@ -101,3 +101,20 @@ export function getMonthName(month) {
 export function isToday(dateStr) {
   return dateStr === today()
 }
+
+export function getSameDayOfWeek(entries, dayOfWeek, n = 8) {
+  return entries
+    .filter(e => {
+      const [year, month, day] = e.date.split('-').map(Number)
+      return new Date(year, month - 1, day).getDay() === dayOfWeek
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, n)
+}
+
+export function getSameDayOfMonth(entries, dayOfMonth, n = 8) {
+  return entries
+    .filter(e => parseInt(e.date.split('-')[2]) === dayOfMonth)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, n)
+}
