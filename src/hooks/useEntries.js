@@ -1,24 +1,20 @@
-import { useState, useCallback } from 'react'
-
-const STORAGE_KEY = 'echo-diary-entries'
-
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function persist(entries) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
-}
+import { useState, useCallback, useEffect } from 'react'
+import { migrateFromLocalStorage, getAllEntries, putEntry, removeEntry } from '../utils/db'
 
 export function useEntries() {
-  const [entries, setEntries] = useState(load)
+  const [entries, setEntries] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const addEntry = useCallback(({ date, text, audioDataUrl, photoDataUrl }) => {
+  useEffect(() => {
+    migrateFromLocalStorage()
+      .then(() => getAllEntries())
+      .then(all => {
+        setEntries(all)
+        setLoading(false)
+      })
+  }, [])
+
+  const addEntry = useCallback(async ({ date, text, audioDataUrl, photoDataUrl }) => {
     const entry = {
       id: Date.now().toString(),
       date,
@@ -27,21 +23,19 @@ export function useEntries() {
       photoDataUrl: photoDataUrl || null,
       createdAt: new Date().toISOString(),
     }
-    setEntries(prev => {
-      const next = [entry, ...prev]
-      persist(next)
-      return next
-    })
+    await putEntry(entry)
+    setEntries(prev =>
+      [entry, ...prev].sort((a, b) =>
+        b.date.localeCompare(a.date) || new Date(b.createdAt) - new Date(a.createdAt)
+      )
+    )
     return entry
   }, [])
 
-  const deleteEntry = useCallback((id) => {
-    setEntries(prev => {
-      const next = prev.filter(e => e.id !== id)
-      persist(next)
-      return next
-    })
+  const deleteEntry = useCallback(async (id) => {
+    await removeEntry(id)
+    setEntries(prev => prev.filter(e => e.id !== id))
   }, [])
 
-  return { entries, addEntry, deleteEntry }
+  return { entries, addEntry, deleteEntry, loading }
 }
