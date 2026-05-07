@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Mic, Image, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Mic, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import { formatTime, formatDate } from '../utils/dateUtils'
 
 export default function EntryCard({ entry, onDelete, showDate = false }) {
   const [expanded, setExpanded] = useState(false)
-  const [showPhoto, setShowPhoto] = useState(false)
+  const [photoExpanded, setPhotoExpanded] = useState(false)
   const isLong = entry.text.length > 220
 
   return (
@@ -33,30 +33,24 @@ export default function EntryCard({ entry, onDelete, showDate = false }) {
             </button>
           )}
 
-          <div className="flex items-center gap-3 mt-3 flex-wrap">
-            {entry.audioDataUrl && (
-              <div className="flex items-center gap-1.5">
-                <Mic size={11} className="text-sage shrink-0" />
-                <audio src={entry.audioDataUrl} controls style={{ height: '28px', maxWidth: '160px' }} />
-              </div>
-            )}
-            {entry.photoDataUrl && (
-              <button
-                onClick={() => setShowPhoto(!showPhoto)}
-                className="flex items-center gap-1 text-xs text-espresso-light hover:text-amber font-ui transition-colors"
-              >
-                <Image size={11} />
-                {showPhoto ? 'Hide photo' : 'View photo'}
-              </button>
-            )}
-          </div>
+          {entry.audioDataUrl && (
+            <div className="flex items-center gap-1.5 mt-3">
+              <Mic size={11} className="text-sage shrink-0" />
+              <audio src={entry.audioDataUrl} controls style={{ height: '28px', maxWidth: '160px' }} />
+            </div>
+          )}
 
-          {entry.photoDataUrl && showPhoto && (
-            <div className="mt-3 rounded-lg overflow-hidden">
+          {entry.photoDataUrl && (
+            <div
+              className="mt-3 rounded-lg overflow-hidden cursor-pointer"
+              onClick={() => setPhotoExpanded(p => !p)}
+            >
               <img
                 src={entry.photoDataUrl}
                 alt="Entry photo"
-                className="w-full max-h-64 object-cover rounded-lg"
+                className={`w-full object-cover rounded-lg transition-all duration-200 ${
+                  photoExpanded ? 'max-h-64' : 'h-20'
+                }`}
               />
             </div>
           )}
