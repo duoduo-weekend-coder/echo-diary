@@ -12,6 +12,7 @@ export function useEntries() {
         setEntries(all)
         setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [])
 
   const addEntry = useCallback(async ({ date, text, audioDataUrl, photoDataUrl }) => {
@@ -37,5 +38,10 @@ export function useEntries() {
     setEntries(prev => prev.filter(e => e.id !== id))
   }, [])
 
-  return { entries, addEntry, deleteEntry, loading }
+  const reloadEntries = useCallback(async () => {
+    const all = await getAllEntries()
+    setEntries(all)
+  }, [])
+
+  return { entries, addEntry, deleteEntry, loading, reloadEntries }
 }

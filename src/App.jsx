@@ -12,7 +12,7 @@ import OnThisDayView from './components/OnThisDayView'
 import BackupSheet from './components/BackupSheet'
 
 export default function App() {
-  const { entries, addEntry, deleteEntry, loading } = useEntries()
+  const { entries, addEntry, deleteEntry, loading, reloadEntries } = useEntries()
   const [view, setView] = useState('timeline')
   const [showEditor, setShowEditor] = useState(false)
   const [showBackup, setShowBackup] = useState(false)
@@ -77,7 +77,7 @@ export default function App() {
           onClose={() => setShowBackup(false)}
           onImport={() => {
             setShowBackup(false)
-            window.location.reload()
+            reloadEntries()
           }}
         />
       )}
