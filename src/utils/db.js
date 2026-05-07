@@ -52,6 +52,7 @@ export async function exportAll() {
 }
 
 export async function importEntries(incoming) {
+  if (!Array.isArray(incoming)) return 0
   const db = await open()
   const existing = await db.getAll(STORE)
   const existingIds = new Set(existing.map(e => e.id))
