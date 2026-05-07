@@ -1,30 +1,33 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { CalendarDays } from 'lucide-react'
 import { getOnThisDayFilter, getSameDayOfWeek, getSameDayOfMonth, today, formatDateShort } from '../utils/dateUtils'
 import EntryCard from './EntryCard'
 
 const WEEKDAY_ZH = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 export default function OnThisDayView({ entries, onDelete }) {
-  const t = today()
-  const [, mm, dd] = t.split('-')
+  const todayStr = today()
+  const [selectedDate, setSelectedDate] = useState(todayStr)
   const [mode, setMode] = useState('onthisday')
+  const dateInputRef = useRef()
 
-  const todayDate = new Date(parseInt(t.slice(0, 4)), parseInt(mm) - 1, parseInt(dd))
-  const todayDow = todayDate.getDay()
-  const todayDom = parseInt(dd)
+  const [, mm, dd] = selectedDate.split('-')
+  const selDate = new Date(parseInt(selectedDate.slice(0, 4)), parseInt(mm) - 1, parseInt(dd))
+  const selDow = selDate.getDay()
+  const selDom = parseInt(dd)
 
-  const monthDay = todayDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
+  const monthDay = selDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
 
   const chips = [
     { id: 'onthisday', label: '历年今天' },
-    { id: 'weekday', label: `每${WEEKDAY_ZH[todayDow]}` },
-    { id: 'dayofmonth', label: `每月${todayDom}号` },
+    { id: 'weekday', label: `每${WEEKDAY_ZH[selDow]}` },
+    { id: 'dayofmonth', label: `每月${selDom}号` },
   ]
 
   let results
-  if (mode === 'onthisday') results = getOnThisDayFilter(entries)
-  else if (mode === 'weekday') results = getSameDayOfWeek(entries, todayDow)
-  else results = getSameDayOfMonth(entries, todayDom)
+  if (mode === 'onthisday') results = getOnThisDayFilter(entries, selectedDate)
+  else if (mode === 'weekday') results = getSameDayOfWeek(entries, selDow)
+  else results = getSameDayOfMonth(entries, selDom)
 
   const subLabel = mode === 'onthisday' ? 'Across all years'
     : mode === 'weekday' ? 'Recent weeks'
@@ -34,10 +37,49 @@ export default function OnThisDayView({ entries, onDelete }) {
     ? 'Write today\'s entry — next year, it will appear here as a beautiful echo from the past'
     : '写下今天的日记，这一天的回响就开始了'
 
+  const openDatePicker = () => {
+    const el = dateInputRef.current
+    if (!el) return
+    if (typeof el.showPicker === 'function') {
+      try { el.showPicker() } catch { el.click() }
+    } else {
+      el.click()
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="text-center pb-1">
-        <p className="font-display text-2xl italic text-espresso">{monthDay}</p>
+        <button
+          type="button"
+          onClick={openDatePicker}
+          className="inline-flex items-center gap-1.5 group"
+          aria-label="Change date"
+        >
+          <span className="font-display text-2xl italic text-espresso">{monthDay}</span>
+          <CalendarDays
+            size={13}
+            className="text-espresso-light group-hover:text-amber transition-colors mt-0.5 shrink-0"
+          />
+        </button>
+        <input
+          ref={dateInputRef}
+          type="date"
+          value={selectedDate}
+          max={todayStr}
+          onChange={e => e.target.value && setSelectedDate(e.target.value)}
+          style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+          tabIndex={-1}
+        />
+        {selectedDate !== todayStr && (
+          <button
+            type="button"
+            onClick={() => setSelectedDate(todayStr)}
+            className="block mx-auto mt-0.5 text-[11px] font-ui text-amber hover:underline leading-none"
+          >
+            ← Today
+          </button>
+        )}
         <p className="font-ui text-[11px] text-espresso-light mt-1 tracking-widest uppercase">{subLabel}</p>
       </div>
 
@@ -107,7 +149,7 @@ export default function OnThisDayView({ entries, onDelete }) {
               style={{ animationDelay: `${idx * 0.05}s`, opacity: 0, animationFillMode: 'forwards' }}
             >
               <p className="text-[10px] font-ui text-amber tracking-wide uppercase mb-1 pl-1">
-                {entry.date === t ? '今天' : formatDateShort(entry.date)}
+                {entry.date === todayStr ? '今天' : formatDateShort(entry.date)}
               </p>
               <EntryCard entry={entry} onDelete={onDelete} />
             </div>

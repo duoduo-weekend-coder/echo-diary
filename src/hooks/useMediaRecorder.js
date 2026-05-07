@@ -1,5 +1,20 @@
 import { useState, useRef, useCallback } from 'react'
 
+function getSupportedMimeType() {
+  if (typeof MediaRecorder === 'undefined') return ''
+  const types = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/ogg;codecs=opus',
+    'audio/ogg',
+  ]
+  for (const type of types) {
+    if (MediaRecorder.isTypeSupported(type)) return type
+  }
+  return ''
+}
+
 export function useMediaRecorder() {
   const [isRecording, setIsRecording] = useState(false)
   const [audioDataUrl, setAudioDataUrl] = useState(null)
@@ -9,6 +24,7 @@ export function useMediaRecorder() {
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
   const timerRef = useRef(null)
+  const mimeTypeRef = useRef('')
 
   const startRecording = useCallback(async () => {
     setError(null)
@@ -17,19 +33,36 @@ export function useMediaRecorder() {
     setDuration(0)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream)
+      const mimeType = getSupportedMimeType()
+      mimeTypeRef.current = mimeType
+      const options = mimeType ? { mimeType } : {}
+      const mediaRecorder = new MediaRecorder(stream, options)
       mediaRecorderRef.current = mediaRecorder
       chunksRef.current = []
 
       mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data)
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data)
       }
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        stream.getTracks().forEach(t => t.stop())
+        if (chunksRef.current.length === 0) {
+          setError('No audio was captured — try recording for a moment longer')
+          return
+        }
+        // Use the actual MIME type the recorder used, not a hardcoded one
+        const type = mediaRecorderRef.current?.mimeType || mimeTypeRef.current || 'audio/webm'
+        const blob = new Blob(chunksRef.current, { type })
         const reader = new FileReader()
         reader.onload = () => setAudioDataUrl(reader.result)
+        reader.onerror = () => setError('Failed to process the recording')
         reader.readAsDataURL(blob)
+      }
+
+      mediaRecorder.onerror = (e) => {
+        setError(e.error?.message || 'Recording error')
+        setIsRecording(false)
+        clearInterval(timerRef.current)
         stream.getTracks().forEach(t => t.stop())
       }
 
@@ -40,10 +73,12 @@ export function useMediaRecorder() {
         setDuration(d => d + 1)
       }, 1000)
     } catch (err) {
-      if (err.name === 'NotFoundError') {
+      if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         setDeviceNotFound(true)
+      } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setError('Microphone access denied')
       } else {
-        setError(err.message || 'Microphone access denied')
+        setError(err.message || 'Could not start recording')
       }
     }
   }, [])
@@ -60,6 +95,7 @@ export function useMediaRecorder() {
     setAudioDataUrl(null)
     setDuration(0)
     setDeviceNotFound(false)
+    setError(null)
   }, [])
 
   return { isRecording, audioDataUrl, error, deviceNotFound, duration, startRecording, stopRecording, clearRecording }

@@ -68,8 +68,8 @@ export function getYearMonths(year) {
   }))
 }
 
-export function getOnThisDayFilter(entries) {
-  const t = today()
+export function getOnThisDayFilter(entries, dateStr) {
+  const t = dateStr || today()
   const [, mm, dd] = t.split('-')
   return entries
     .filter(e => {
