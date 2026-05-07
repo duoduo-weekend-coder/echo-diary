@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { getMonthDays, today, isToday, getMonthName, formatDate } from '../utils/dateUtils'
+import { getMonthDays, today, isToday, getMonthName, formatDate, groupByDate } from '../utils/dateUtils'
 import EntryCard from './EntryCard'
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -9,7 +9,6 @@ export default function MonthView({ entries, onDelete }) {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
-  const [selectedDay, setSelectedDay] = useState(today())
 
   const entryMap = {}
   entries.forEach(e => {
@@ -18,9 +17,9 @@ export default function MonthView({ entries, onDelete }) {
   })
 
   const days = getMonthDays(year, month)
-  const selectedEntries = (entryMap[selectedDay] || []).sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-  )
+  const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`
+  const monthEntries = entries.filter(e => e.date.startsWith(monthPrefix))
+  const groups = groupByDate(monthEntries)
 
   const prevMonth = () => {
     if (month === 0) { setMonth(11); setYear(y => y - 1) }
@@ -53,42 +52,56 @@ export default function MonthView({ entries, onDelete }) {
         ))}
         {days.map(({ date, isCurrentMonth }) => {
           const count = entryMap[date]?.length || 0
-          const isSelected = selectedDay === date
           const isTdy = isToday(date)
+          const firstPhoto = isCurrentMonth && entryMap[date]?.find(e => e.photoDataUrl)?.photoDataUrl
           return (
-            <button
+            <div
               key={date}
-              onClick={() => isCurrentMonth && setSelectedDay(date)}
-              className={`aspect-square flex flex-col items-center justify-center rounded-lg text-xs transition-all ${
+              className={`aspect-square flex flex-col items-center justify-center rounded-lg text-xs ${
                 !isCurrentMonth
-                  ? 'opacity-15 pointer-events-none'
-                  : isSelected
-                  ? 'bg-amber text-white shadow-sm'
+                  ? 'opacity-15'
                   : isTdy
                   ? 'bg-parchment-dark text-espresso font-medium ring-1 ring-amber/30'
-                  : 'text-espresso-mid hover:bg-parchment-dark'
+                  : 'text-espresso-mid'
               }`}
             >
               <span className="font-ui leading-none">{parseInt(date.split('-')[2])}</span>
-              {count > 0 && (
-                <span className={`w-1 h-1 rounded-full mt-0.5 ${isSelected ? 'bg-white/60' : 'bg-amber'}`} />
+              {isCurrentMonth && (
+                firstPhoto ? (
+                  <img src={firstPhoto} alt="" className="w-3 h-3 rounded-full object-cover mt-0.5" />
+                ) : count > 0 ? (
+                  <span className="w-1 h-1 rounded-full mt-0.5 bg-amber" />
+                ) : null
               )}
-            </button>
+            </div>
           )
         })}
       </div>
 
       <div className="pt-1">
-        {selectedEntries.length > 0 ? (
-          <div className="space-y-2.5">
-            <p className="text-xs font-ui text-espresso-light">{formatDate(selectedDay)}</p>
-            {selectedEntries.map(entry => (
-              <EntryCard key={entry.id} entry={entry} onDelete={onDelete} />
-            ))}
+        {groups.length === 0 ? (
+          <div className="text-center py-10">
+            <p className="font-body text-espresso-light text-sm italic">Nothing written in {getMonthName(month)}</p>
           </div>
         ) : (
-          <div className="text-center py-10">
-            <p className="font-body text-espresso-light text-sm italic">Nothing written on {formatDate(selectedDay)}</p>
+          <div className="space-y-6 pb-2">
+            {groups.map(([date, dayEntries]) => (
+              <div key={date}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${isToday(date) ? 'bg-amber' : 'bg-warm-border'}`} />
+                  <h3 className={`font-display text-sm italic ${isToday(date) ? 'text-amber' : 'text-espresso-light'}`}>
+                    {formatDate(date)}
+                    {isToday(date) && <span className="ml-2 text-[10px] font-ui tracking-widest uppercase not-italic">Today</span>}
+                  </h3>
+                  <div className="flex-1 h-px bg-warm-border" />
+                </div>
+                <div className="space-y-2.5">
+                  {dayEntries.map(entry => (
+                    <EntryCard key={entry.id} entry={entry} onDelete={onDelete} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

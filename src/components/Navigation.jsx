@@ -1,7 +1,6 @@
-import { BookOpen, CalendarDays, Calendar, CalendarRange, Star } from 'lucide-react'
+import { CalendarDays, Calendar, CalendarRange, Star } from 'lucide-react'
 
 const TABS = [
-  { id: 'timeline', label: 'Timeline', Icon: BookOpen },
   { id: 'week', label: 'Week', Icon: CalendarDays },
   { id: 'month', label: 'Month', Icon: Calendar },
   { id: 'year', label: 'Year', Icon: CalendarRange },

@@ -4,7 +4,6 @@ import { useEntries } from './hooks/useEntries'
 import { today, formatDate } from './utils/dateUtils'
 import Navigation from './components/Navigation'
 import EntryEditor from './components/EntryEditor'
-import TimelineView from './components/TimelineView'
 import WeekView from './components/WeekView'
 import MonthView from './components/MonthView'
 import YearView from './components/YearView'
@@ -13,7 +12,7 @@ import BackupSheet from './components/BackupSheet'
 
 export default function App() {
   const { entries, addEntry, deleteEntry, loading, reloadEntries } = useEntries()
-  const [view, setView] = useState('timeline')
+  const [view, setView] = useState('week')
   const [showEditor, setShowEditor] = useState(false)
   const [showBackup, setShowBackup] = useState(false)
 
@@ -57,7 +56,6 @@ export default function App() {
           </div>
         ) : (
           <>
-            {view === 'timeline' && <TimelineView entries={entries} onDelete={deleteEntry} />}
             {view === 'week' && <WeekView entries={entries} onDelete={deleteEntry} />}
             {view === 'month' && <MonthView entries={entries} onDelete={deleteEntry} />}
             {view === 'year' && <YearView entries={entries} />}
