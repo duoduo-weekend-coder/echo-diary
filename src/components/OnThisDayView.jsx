@@ -5,7 +5,7 @@ import EntryCard from './EntryCard'
 
 const WEEKDAY_ZH = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
-export default function OnThisDayView({ entries, onDelete }) {
+export default function OnThisDayView({ entries, onDelete, onEdit }) {
   const todayStr = today()
   const [selectedDate, setSelectedDate] = useState(todayStr)
   const [mode, setMode] = useState('onthisday')
@@ -132,7 +132,7 @@ export default function OnThisDayView({ entries, onDelete }) {
                     </div>
                     <div className="space-y-2">
                       {yearEntries.map(entry => (
-                        <EntryCard key={entry.id} entry={entry} onDelete={onDelete} />
+                        <EntryCard key={entry.id} entry={entry} onDelete={onDelete} onEdit={onEdit} />
                       ))}
                     </div>
                   </div>
@@ -151,7 +151,7 @@ export default function OnThisDayView({ entries, onDelete }) {
               <p className="text-[10px] font-ui text-amber tracking-wide uppercase mb-1 pl-1">
                 {entry.date === todayStr ? '今天' : formatDateShort(entry.date)}
               </p>
-              <EntryCard entry={entry} onDelete={onDelete} />
+              <EntryCard entry={entry} onDelete={onDelete} onEdit={onEdit} />
             </div>
           ))}
         </div>

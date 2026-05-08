@@ -11,9 +11,10 @@ import OnThisDayView from './components/OnThisDayView'
 import BackupSheet from './components/BackupSheet'
 
 export default function App() {
-  const { entries, addEntry, deleteEntry, loading, reloadEntries } = useEntries()
+  const { entries, addEntry, updateEntry, deleteEntry, loading, reloadEntries } = useEntries()
   const [view, setView] = useState('week')
   const [showEditor, setShowEditor] = useState(false)
+  const [editingEntry, setEditingEntry] = useState(null)
   const [showBackup, setShowBackup] = useState(false)
 
   return (
@@ -56,10 +57,10 @@ export default function App() {
           </div>
         ) : (
           <>
-            {view === 'week' && <WeekView entries={entries} onDelete={deleteEntry} />}
-            {view === 'month' && <MonthView entries={entries} onDelete={deleteEntry} />}
+            {view === 'week' && <WeekView entries={entries} onDelete={deleteEntry} onEdit={setEditingEntry} />}
+            {view === 'month' && <MonthView entries={entries} onDelete={deleteEntry} onEdit={setEditingEntry} />}
             {view === 'year' && <YearView entries={entries} />}
-            {view === 'onthisday' && <OnThisDayView entries={entries} onDelete={deleteEntry} />}
+            {view === 'onthisday' && <OnThisDayView entries={entries} onDelete={deleteEntry} onEdit={setEditingEntry} />}
           </>
         )}
       </main>
@@ -68,6 +69,14 @@ export default function App() {
 
       {showEditor && (
         <EntryEditor onSave={addEntry} onClose={() => setShowEditor(false)} />
+      )}
+
+      {editingEntry && (
+        <EntryEditor
+          initialEntry={editingEntry}
+          onSave={updateEntry}
+          onClose={() => setEditingEntry(null)}
+        />
       )}
 
       {showBackup && (

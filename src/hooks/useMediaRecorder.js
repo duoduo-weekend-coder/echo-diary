@@ -34,10 +34,13 @@ export function useMediaRecorder() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mimeType = getSupportedMimeType()
-      mimeTypeRef.current = mimeType
       const options = mimeType ? { mimeType } : {}
       const mediaRecorder = new MediaRecorder(stream, options)
       mediaRecorderRef.current = mediaRecorder
+      // Read mimeType immediately after construction — browsers expose the actual assigned
+      // format here before start(). Reading it in onstop returns '' on some mobile browsers.
+      // Fall back to audio/mp4 (not webm) since iOS records AAC-in-MP4 when unspecified.
+      mimeTypeRef.current = mediaRecorder.mimeType || mimeType || 'audio/mp4'
       chunksRef.current = []
 
       mediaRecorder.ondataavailable = (e) => {
@@ -50,11 +53,15 @@ export function useMediaRecorder() {
           setError('No audio was captured — try recording for a moment longer')
           return
         }
-        // Use the actual MIME type the recorder used, not a hardcoded one
-        const type = mediaRecorderRef.current?.mimeType || mimeTypeRef.current || 'audio/webm'
-        const blob = new Blob(chunksRef.current, { type })
+        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
         const reader = new FileReader()
-        reader.onload = () => setAudioDataUrl(reader.result)
+        reader.onload = () => {
+          // Some mobile browsers (Firefox Android, older iOS Safari) fire onerror
+          // spuriously on a normal stop before onstop runs. Clear it here so the
+          // error banner doesn't linger when audio was actually captured.
+          setError(null)
+          setAudioDataUrl(reader.result)
+        }
         reader.onerror = () => setError('Failed to process the recording')
         reader.readAsDataURL(blob)
       }

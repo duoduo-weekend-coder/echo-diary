@@ -3,11 +3,12 @@ import { X, Image, Trash2 } from 'lucide-react'
 import { today } from '../utils/dateUtils'
 import AudioRecorder from './AudioRecorder'
 
-export default function EntryEditor({ onSave, onClose }) {
-  const [text, setText] = useState('')
-  const [audioDataUrl, setAudioDataUrl] = useState(null)
-  const [photoDataUrl, setPhotoDataUrl] = useState(null)
-  const [date, setDate] = useState(today())
+export default function EntryEditor({ onSave, onClose, initialEntry }) {
+  const isEditing = !!initialEntry
+  const [text, setText] = useState(initialEntry?.text || '')
+  const [audioDataUrl, setAudioDataUrl] = useState(initialEntry?.audioDataUrl || null)
+  const [photoDataUrl, setPhotoDataUrl] = useState(initialEntry?.photoDataUrl || null)
+  const [date, setDate] = useState(initialEntry?.date || today())
   const fileRef = useRef()
 
   const handlePhotoChange = (e) => {
@@ -24,7 +25,8 @@ export default function EntryEditor({ onSave, onClose }) {
 
   const handleSave = () => {
     if (!text.trim() && !audioDataUrl && !photoDataUrl) return
-    onSave({ date, text, audioDataUrl, photoDataUrl })
+    // Spread initialEntry to preserve id/createdAt when editing; ignored for new entries
+    onSave({ ...initialEntry, date, text, audioDataUrl, photoDataUrl })
     onClose()
   }
 
@@ -42,7 +44,7 @@ export default function EntryEditor({ onSave, onClose }) {
         style={{ maxHeight: '88dvh', overflowY: 'auto' }}
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl text-espresso italic font-normal">New Entry</h2>
+          <h2 className="font-display text-xl text-espresso italic font-normal">{isEditing ? 'Edit Entry' : 'New Entry'}</h2>
           <button onClick={onClose} className="p-1.5 text-espresso-light hover:text-espresso rounded-lg">
             <X size={17} />
           </button>
@@ -93,7 +95,7 @@ export default function EntryEditor({ onSave, onClose }) {
         <div className="flex gap-3 pt-2 pb-safe">
           <button onClick={onClose} className="btn-ghost flex-1">Cancel</button>
           <button onClick={handleSave} disabled={!canSave} className="btn-primary flex-1">
-            Save Entry
+            {isEditing ? 'Save Changes' : 'Save Entry'}
           </button>
         </div>
       </div>

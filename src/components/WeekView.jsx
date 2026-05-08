@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getWeekDays, today, isToday, getDayOfWeek, formatDateShort, formatDate, groupByDate } from '../utils/dateUtils'
 import EntryCard from './EntryCard'
 
-export default function WeekView({ entries, onDelete }) {
+export default function WeekView({ entries, onDelete, onEdit }) {
   const [weekOffset, setWeekOffset] = useState(0)
 
   const baseDate = new Date()
@@ -81,7 +81,7 @@ export default function WeekView({ entries, onDelete }) {
                 </div>
                 <div className="space-y-2.5">
                   {dayEntries.map(entry => (
-                    <EntryCard key={entry.id} entry={entry} onDelete={onDelete} />
+                    <EntryCard key={entry.id} entry={entry} onDelete={onDelete} onEdit={onEdit} />
                   ))}
                 </div>
               </div>

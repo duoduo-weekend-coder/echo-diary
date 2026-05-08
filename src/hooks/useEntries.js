@@ -33,6 +33,21 @@ export function useEntries() {
     return entry
   }, [])
 
+  const updateEntry = useCallback(async (entry) => {
+    const updated = {
+      ...entry,
+      text: (entry.text || '').trim(),
+      audioDataUrl: entry.audioDataUrl || null,
+      photoDataUrl: entry.photoDataUrl || null,
+    }
+    await putEntry(updated)
+    setEntries(prev =>
+      prev
+        .map(e => e.id === updated.id ? updated : e)
+        .sort((a, b) => b.date.localeCompare(a.date) || new Date(b.createdAt) - new Date(a.createdAt))
+    )
+  }, [])
+
   const deleteEntry = useCallback(async (id) => {
     await removeEntry(id)
     setEntries(prev => prev.filter(e => e.id !== id))
@@ -43,5 +58,5 @@ export function useEntries() {
     setEntries(all)
   }, [])
 
-  return { entries, addEntry, deleteEntry, loading, reloadEntries }
+  return { entries, addEntry, updateEntry, deleteEntry, loading, reloadEntries }
 }

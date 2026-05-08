@@ -5,7 +5,7 @@ import EntryCard from './EntryCard'
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-export default function MonthView({ entries, onDelete }) {
+export default function MonthView({ entries, onDelete, onEdit }) {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
@@ -97,7 +97,7 @@ export default function MonthView({ entries, onDelete }) {
                 </div>
                 <div className="space-y-2.5">
                   {dayEntries.map(entry => (
-                    <EntryCard key={entry.id} entry={entry} onDelete={onDelete} />
+                    <EntryCard key={entry.id} entry={entry} onDelete={onDelete} onEdit={onEdit} />
                   ))}
                 </div>
               </div>
