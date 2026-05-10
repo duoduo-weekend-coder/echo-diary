@@ -33,7 +33,7 @@ export default function YearView({ entries }) {
                 {days.slice(0, 35).map(({ date, isCurrentMonth }) => (
                   <div
                     key={date}
-                    className={`aspect-square rounded-sm ${
+                    className={`relative aspect-square rounded-sm ${
                       !isCurrentMonth
                         ? 'bg-transparent'
                         : entryDates.has(date)
@@ -42,7 +42,13 @@ export default function YearView({ entries }) {
                         ? 'bg-parchment-dark ring-1 ring-amber/40'
                         : 'bg-parchment-dark/50'
                     }`}
-                  />
+                  >
+                    {date === todayStr && isCurrentMonth && (
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className={`w-1 h-1 rounded-full ${entryDates.has(date) ? 'bg-white/80' : 'bg-amber'}`} />
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
               {monthEntries > 0 && (
