@@ -6,6 +6,8 @@ export default function YearView({ entries }) {
   const [year, setYear] = useState(new Date().getFullYear())
 
   const entryDates = new Set(entries.map(e => e.date))
+  const photoMap = {}
+  entries.forEach(e => { if (e.photoDataUrl && !photoMap[e.date]) photoMap[e.date] = e.photoDataUrl })
   const months = getYearMonths(year)
   const todayStr = today()
 
@@ -33,9 +35,11 @@ export default function YearView({ entries }) {
                 {days.slice(0, 35).map(({ date, isCurrentMonth }) => (
                   <div
                     key={date}
-                    className={`relative aspect-square rounded-sm ${
+                    className={`relative aspect-square rounded-sm overflow-hidden ${
                       !isCurrentMonth
                         ? 'bg-transparent'
+                        : photoMap[date]
+                        ? ''
                         : entryDates.has(date)
                         ? 'bg-amber'
                         : date === todayStr
@@ -43,6 +47,9 @@ export default function YearView({ entries }) {
                         : 'bg-parchment-dark/50'
                     }`}
                   >
+                    {isCurrentMonth && photoMap[date] && (
+                      <img src={photoMap[date]} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    )}
                     {date === todayStr && isCurrentMonth && (
                       <span className="absolute inset-0 flex items-center justify-center">
                         <span className={`w-1 h-1 rounded-full ${entryDates.has(date) ? 'bg-white/80' : 'bg-amber'}`} />
