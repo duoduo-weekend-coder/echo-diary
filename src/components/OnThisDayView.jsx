@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { CalendarDays } from 'lucide-react'
 import { getOnThisDayFilter, getSameDayOfWeek, getSameDayOfMonth, today, formatDateShort } from '../utils/dateUtils'
 import EntryCard from './EntryCard'
@@ -9,7 +9,6 @@ export default function OnThisDayView({ entries, onDelete, onEdit }) {
   const todayStr = today()
   const [selectedDate, setSelectedDate] = useState(todayStr)
   const [mode, setMode] = useState('onthisday')
-  const dateInputRef = useRef()
 
   const [, mm, dd] = selectedDate.split('-')
   const selDate = new Date(parseInt(selectedDate.slice(0, 4)), parseInt(mm) - 1, parseInt(dd))
@@ -37,40 +36,30 @@ export default function OnThisDayView({ entries, onDelete, onEdit }) {
     ? 'Write today\'s entry — next year, it will appear here as a beautiful echo from the past'
     : '写下今天的日记，这一天的回响就开始了'
 
-  const openDatePicker = () => {
-    const el = dateInputRef.current
-    if (!el) return
-    if (typeof el.showPicker === 'function') {
-      try { el.showPicker() } catch { el.click() }
-    } else {
-      el.click()
-    }
-  }
-
   return (
     <div className="space-y-4">
       <div className="text-center pb-1">
-        <button
-          type="button"
-          onClick={openDatePicker}
-          className="inline-flex items-center gap-1.5 group"
-          aria-label="Change date"
-        >
-          <span className="font-display text-2xl italic text-espresso">{monthDay}</span>
-          <CalendarDays
-            size={13}
-            className="text-espresso-light group-hover:text-amber transition-colors mt-0.5 shrink-0"
+        <div className="relative inline-flex">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 group"
+            aria-label="Change date"
+          >
+            <span className="font-display text-2xl italic text-espresso">{monthDay}</span>
+            <CalendarDays
+              size={13}
+              className="text-espresso-light group-hover:text-amber transition-colors mt-0.5 shrink-0"
+            />
+          </button>
+          <input
+            type="date"
+            value={selectedDate}
+            max={todayStr}
+            onChange={e => e.target.value && setSelectedDate(e.target.value)}
+            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 10 }}
+            tabIndex={-1}
           />
-        </button>
-        <input
-          ref={dateInputRef}
-          type="date"
-          value={selectedDate}
-          max={todayStr}
-          onChange={e => e.target.value && setSelectedDate(e.target.value)}
-          style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-          tabIndex={-1}
-        />
+        </div>
         {selectedDate !== todayStr && (
           <button
             type="button"
